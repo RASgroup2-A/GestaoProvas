@@ -40,5 +40,20 @@ router.get('/provas/:id', function(req, res, next){
     })
 })
 
+//> Rota para inserir uma questão numa prova
+router.post('/provas/:id/versao/:idv/questoes', verificaDocenteToken, function(req, res, next){
+
+})
+
+//! ROTA PARA DEBUG E TESTES
+router.get('/debug/:docente', function(req, res, next){
+    ProvasController.provaHasDocente('6569fa246684f39d66830c50',req.params.docente)
+    .then(result => {
+        res.jsonp(result)
+    })
+    .catch(err => { 
+        res.status(500).jsonp({msg: err.message});
+    })
+})
 
 module.exports = router;

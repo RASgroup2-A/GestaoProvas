@@ -39,6 +39,7 @@ const provaSchema = new mongoose.Schema({
     docentes: [String],
     unidadeCurricular: String,
     retrocesso: Boolean,
+    aleatorizacao: Boolean,
     versoes: [versaoSchema]
 }, {collection: 'provas'})
 

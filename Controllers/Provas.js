@@ -1,4 +1,5 @@
 const ProvasModel = require('../Models/Provas');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 /* 
 Obtém uma prova dado o seu id.
@@ -40,18 +41,40 @@ module.exports.addProva = async (prova) => {
     return await ProvasModel.collection.insertOne(prova)
 }
 
+/* 
+Insere uma questão numa versão de uma prova
+*/
+module.exports.addQuestaoToProva = async (idProva, idVersao, questao) => {
+
+}
+
+/* Insere uma versão da prova dentro da prova. */
+module.exports.addVersaoToProva = async (idProva, versao) => {
+
+}
+
 /*
 Verifica se já existe uma prova com o nome fornecido.
 */
 module.exports.existsProvaName = async (provaName) => {
-    
+    let prova = await ProvasModel.findOne({nome: provaName})
+    if (prova) return {result: true}
+    else return {result: false}
 }
 
 /*
 Verifica se uma certa prova tem um docente
 */
 module.exports.provaHasDocente = async (idProva, idDocente) => {
+    let verificacao = await ProvasModel.findOne(
+        {
+            _id: idProva, 
+            docentes: {$in: [idDocente]}
+        }
+    )
 
+    if (verificacao) return {result: true}
+    else return {result: false}
 }
 
 /* 
