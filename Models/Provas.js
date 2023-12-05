@@ -19,7 +19,10 @@ const questaoSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    opcoes: [opcaoSchema] //> Campo opcional
+    opcoes: { //> Campo opcional
+        type: [opcaoSchema], 
+        default: []
+    }
 })
 
 //> Schema de uma versão da prova
@@ -29,7 +32,10 @@ const versaoSchema = new mongoose.Schema({
     alunos: [String],
     sala: String,
     data: Date,
-    questoes: [questaoSchema]
+    questoes: {
+        type: [questaoSchema],
+        default: []
+    }
 })
 
 //> Schema de uma prova
@@ -40,7 +46,10 @@ const provaSchema = new mongoose.Schema({
     unidadeCurricular: String,
     retrocesso: Boolean,
     aleatorizacao: Boolean,
-    versoes: [versaoSchema]
+    versoes: {
+        type: [versaoSchema],
+        default: []
+    }
 }, {collection: 'provas'})
 
 /*
