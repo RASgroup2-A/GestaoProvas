@@ -113,7 +113,7 @@ module.exports.biggestIdOfProvaVersions = async (idProva) => {
 
     // maxId no formato [ { "maxId": X} ], é uma lista de um elemento
     if (!maxId || maxId.length === 0 ){ // houve um problema nos ids ou assim, fazendo com que não haja resultado
-        throw new Error(`[Controllers/Provas.js/biggestIdQuestionInProvaVersion] Não existe a correspondência idProva <-> idVersao com idProva=${idProva} e idVersao=${idVersao}`)
+        throw new Error(`[Controllers/Provas.js/biggestIdOfProvaVersions] A prova com id '${idProva}' não existe`)
     }
 
     return maxId[0] // output com o formato { "maxId": X}
