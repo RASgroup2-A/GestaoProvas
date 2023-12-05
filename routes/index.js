@@ -63,6 +63,19 @@ router.get('/provas/:id', function (req, res, next) {
     })
 })
 
+//> Rota para inserir uma versão numa prova
+router.post('/provas/:idProva/versoes', verificaDocenteToken, function (req, res, next) {
+    let versao = req.body
+    ProvasController.addVersaoToProva(req.params.idProva, versao)
+   .then(result => {
+        res.jsonp(result)
+    })
+    .catch(err => {
+        //> Código 500: Internal Server Error
+        res.status(500).jsonp({ msg: err.message });
+    });
+})
+
 //> Rota para inserir uma questão numa versão de uma prova
 //> parece funcionar
 router.post('/provas/:idProva/versao/:idVersao/questoes', verificaDocenteToken, function (req, res, next) {

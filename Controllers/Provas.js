@@ -25,12 +25,15 @@ Regista uma prova na base de dados
 */
 module.exports.addProva = async (prova) => {
     // Criação de ids que não são tratados automaticamente pelo mongodb
+    prova.versoes = prova.versoes || [] //> para evitar que a prova não tenha o campo versoes
     let versoes = prova.versoes || []
     for(let i = 1; i <= versoes.length; i++){
         versoes[i-1].id = i // id da versão
+        versoes[i-1].questoes = versoes[i-1].questoes || [] //> para evitar que a versao não tenha o campo questoes
         let questoes = versoes[i-1].questoes || []
         for(let j = 1; j <= questoes.length; j++){
             versoes[i-1].questoes[j-1].id = j // id da questão
+            versoes[i-1].questoes[j-1].opcoes = versoes[i-1].questoes[j-1].opcoes || [] //> para evitar que a questão não tenha o campo opcoes
             let opcoes = questoes[j-1].opcoes || []
             for(let k = 1; k <= opcoes.length; k++){
                 opcoes[k-1].id = k // id da opção, se existir
@@ -69,7 +72,12 @@ module.exports.biggestIdQuestionsInProvaVersion = (idProva, idVersao) => {
         },
         {$project: {_id: 0,maxId: 1}}
     ]).then(result => {
-        return result[0] // maxId no formato [ { "maxId": X} ], é uma lista de um elemento
+        //> Output no formato: {maxId: X}
+        if (!result || result.length === 0){ //> No caso de ainda não haver uma questão
+            return {maxId: 0}
+        } else {
+            return result[0]
+        }
     }).catch((err) => {
         throw err
     });
@@ -81,7 +89,7 @@ Insere uma questão numa versão de uma prova
 module.exports.addQuestaoToProva = async (idProva, idVersao, questao) => {
     return this.biggestIdQuestionsInProvaVersion(idProva,idVersao)
     .then((result) => {
-        questao.id = result.maxId +1 //> calcula o id da questão questão
+        questao.id = result.maxId +1 //> calcula o id da questão 
         let opcoes = questao.opcoes || []
         //> Criação de ids que não são tratados automaticamente pelo mongodb
         for(let i = 1; i <= opcoes.length; i++){
@@ -123,7 +131,12 @@ module.exports.biggestIdOfProvaVersions = async (idProva) => {
         },
         {$project: {_id: 0, maxId: 1}}
     ]).then(result => {
-        return result[0] // maxId no formato [ { "maxId": X} ], é uma lista de um elemento
+        //> Output no formato: {maxId: X}
+        if (!result || result.length === 0){ //> No caso de ainda não haver uma versão
+            return {maxId: 0}
+        } else {
+            return result[0]
+        }
     }).catch((err) => {
         throw err
     });
@@ -131,9 +144,31 @@ module.exports.biggestIdOfProvaVersions = async (idProva) => {
 
 /* Insere uma versão da prova dentro da prova. */
 module.exports.addVersaoToProva = async (idProva, versao) => {
-    let nextVersionId = await this.biggestIdOfProvaVersions(idProva).maxId +1
-    versao.id = nextVersionId
-    //! TODO: Continuar isto
+    return this.biggestIdOfProvaVersions(idProva)
+    .then((result) => {
+        versao.id = result.maxId +1 //> calcula o id da versão
+        versao.questoes = versao.questoes || [] //> para evitar que a versão não tenha o campo questoes
+        let questoes = versao.questoes || []
+        //> Criação de ids que não são tratados automaticamente pelo mongodb
+        for(let i = 1; i <= questoes.length; i++){
+            questoes[i-1].id = i
+            questoes.opcoes[i-1].opcoes = questoes.opcoes || [] //> para evitar que a questão não tenha o campo opcoes
+            let opcoes = questoes[i-1].opcoes || []
+            for(let j = 1; j <= opcoes.length; j++){
+                opcoes[j-1].id = j
+            }
+        }
+
+        return ProvasModel.collection.updateOne({_id: new ObjectId(idProva)}, {
+            $push: {
+                versoes: versao
+            }
+        })
+        
+        //todo: continuar a inserção aqui
+    }).catch((err) => {
+       throw err
+    });
 }
 
 /*

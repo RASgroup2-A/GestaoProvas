@@ -29,7 +29,10 @@ const questaoSchema = new mongoose.Schema({
 const versaoSchema = new mongoose.Schema({
     id: Number,
     numVersao: Number,
-    alunos: [String],
+    alunos: {
+        type: [String],
+        default: []
+    },
     sala: String,
     data: Date,
     questoes: {
@@ -42,7 +45,10 @@ const versaoSchema = new mongoose.Schema({
 const provaSchema = new mongoose.Schema({
     _id: ObjectId,
     nome: String,
-    docentes: [String],
+    docentes: {
+        type: [String],
+        default: []
+    },
     unidadeCurricular: String,
     retrocesso: Boolean,
     aleatorizacao: Boolean,
