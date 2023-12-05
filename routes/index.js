@@ -46,12 +46,12 @@ router.post('/provas/:id/versao/:idv/questoes', verificaDocenteToken, function(r
 })
 
 //! ROTA PARA DEBUG E TESTES
-router.get('/debug/:docente', function(req, res, next){
-    ProvasController.provaHasDocente('6569fa246684f39d66830c50',req.params.docente)
+router.get('/debug', function(req, res, next){
+    ProvasController.biggestIdOfProvaVersions('656e5d1eab78269718bbbe1d')
     .then(result => {
         res.jsonp(result)
     })
-    .catch(err => { 
+    .catch(err => {
         res.status(500).jsonp({msg: err.message});
     })
 })

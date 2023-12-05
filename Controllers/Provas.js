@@ -41,16 +41,90 @@ module.exports.addProva = async (prova) => {
     return await ProvasModel.collection.insertOne(prova)
 }
 
+/*
+Obtém o maior dos ids de questões de uma certa versão de uma prova
+Vai a uma versão de uma prova, vê os ids das questões dessa versão dessa prova e selecciona o maior id.
+(Parece funcionar)
+*/
+module.exports.biggestIdQuestionsInProvaVersion = async (idProva, idVersao) => {
+    let maxId = await ProvasModel.aggregate([
+        {$match: {_id: new ObjectId(idProva)}}, // vai buscar a prova pelo seu id da base de dados
+        {$project: {_id: 0, 'versoes.id': 1,'versoes.questoes.id': 1}}, // selecciona apenas os campos necessários (ids das versoes na base de dados e os ids das questões de cada versão na base de dados)
+        {$unwind: "$versoes"},
+        {
+          $replaceRoot: {
+            newRoot: "$versoes"
+          }
+        },
+        {$match: {id: parseInt(idVersao)}}, // obtem a versão pretendida (pelo id da versão), converte para inteiro porque o argumento vem como string
+        {$project: {id: 0}},
+        {
+          $unwind: "$questoes"
+        },
+        {
+          $group: {
+            _id: null,
+            maxId: { $max: "$questoes.id" }
+          }
+        },
+        {$project: {_id: 0,maxId: 1}}
+    ])
+    // maxId no formato [ { "maxId": X} ], é uma lista de um elemento
+    if (!maxId || maxId.length === 0 ){ // houve um problema nos ids ou assim, fazendo com que não haja resultado
+        throw new Error(`[Controllers/Provas.js/biggestIdQuestionInProvaVersion] Não existe a correspondência idProva <-> idVersao com idProva=${idProva} e idVersao=${idVersao}`)
+    }
+
+    return maxId[0] // output com o formato { "maxId": X}
+}
+
 /* 
 Insere uma questão numa versão de uma prova
 */
 module.exports.addQuestaoToProva = async (idProva, idVersao, questao) => {
+    let nextQuestionId = await this.biggestIdQuestionInProvaVersion(idProva,idVersao).maxId+1// obtém o id da questão
+    questao.id = nextQuestionId
+    //! TODO: Continuar isto
+}
 
+/* Obtém o maior dos ids das versões de uma prova
+Vai a uma prova, vê os ids das versões e escolhe o maior deles
+(Parece funcionar)
+*/
+module.exports.biggestIdOfProvaVersions = async (idProva) => {
+    let maxId = await ProvasModel.aggregate([
+        {$match: {_id: new ObjectId(idProva)}},
+        {$project: {_id: 0, 'versoes.id': 1}},
+        {$unwind: "$versoes"},
+        {
+            $replaceRoot: {
+            newRoot: "$versoes"
+            }
+        },
+        {
+            $group: {
+            _id: null,
+            maxId: {
+                $max: "$id"
+            }
+            }
+        },
+        {$project: {_id: 0, maxId: 1}}
+    ])
+
+    // maxId no formato [ { "maxId": X} ], é uma lista de um elemento
+    if (!maxId || maxId.length === 0 ){ // houve um problema nos ids ou assim, fazendo com que não haja resultado
+        throw new Error(`[Controllers/Provas.js/biggestIdQuestionInProvaVersion] Não existe a correspondência idProva <-> idVersao com idProva=${idProva} e idVersao=${idVersao}`)
+    }
+
+    return maxId[0] // output com o formato { "maxId": X}
+    
 }
 
 /* Insere uma versão da prova dentro da prova. */
 module.exports.addVersaoToProva = async (idProva, versao) => {
-
+    let nextVersionId = await this.biggestIdOfProvaVersions(idProva).maxId +1
+    versao.id = nextVersionId
+    //! TODO: Continuar isto
 }
 
 /*
