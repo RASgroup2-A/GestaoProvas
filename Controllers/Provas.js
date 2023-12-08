@@ -20,10 +20,30 @@ module.exports.getProva = async (id) => {
     return doc
 }
 
+/**
+ * Obtém as questões de uma versão de uma prova
+ */
+module.exports.getQuestoesOfVersaoOfProva = (idProva, idVersao) => {
+    return ProvasModel.aggregate([
+        {$match: {_id: new ObjectId(idProva)}},
+        {$project: {_id: 0, versoes: 1}},
+        {$unwind: "$versoes"},
+        {$match: {'versoes.id': idVersao}},
+        {$project: {'versoes.questoes': 1}},
+        {$unwind: "$versoes.questoes"},
+        {$replaceRoot: { newRoot: "$versoes.questoes" }}
+    ])
+    .then((result) => {
+        return result
+    }).catch((err) => {
+        throw err
+    });
+}
+
 /* 
 Regista uma prova na base de dados
 */
-module.exports.addProva = async (prova) => {
+module.exports.addProva = (prova) => {
     // Criação de ids que não são tratados automaticamente pelo mongodb
     prova.versoes = prova.versoes || [] //> para evitar que a prova não tenha o campo versoes
     let versoes = prova.versoes || []
@@ -86,7 +106,7 @@ module.exports.biggestIdQuestionsInProvaVersion = (idProva, idVersao) => {
 /*
 Insere uma questão numa versão de uma prova
 */
-module.exports.addQuestaoToProva = async (idProva, idVersao, questao) => {
+module.exports.addQuestaoToProva = (idProva, idVersao, questao) => {
     return this.biggestIdQuestionsInProvaVersion(idProva,idVersao)
     .then((result) => {
         questao.id = result.maxId +1 //> calcula o id da questão 
@@ -111,7 +131,7 @@ module.exports.addQuestaoToProva = async (idProva, idVersao, questao) => {
 Vai a uma prova, vê os ids das versões e escolhe o maior deles
 (Parece funcionar)
 */
-module.exports.biggestIdOfProvaVersions = async (idProva) => {
+module.exports.biggestIdOfProvaVersions = (idProva) => {
     return ProvasModel.aggregate([
         {$match: {_id: new ObjectId(idProva)}},
         {$project: {_id: 0, 'versoes.id': 1}},
@@ -143,7 +163,7 @@ module.exports.biggestIdOfProvaVersions = async (idProva) => {
 }
 
 /* Insere uma versão da prova dentro da prova. */
-module.exports.addVersaoToProva = async (idProva, versao) => {
+module.exports.addVersaoToProva = (idProva, versao) => {
     return this.biggestIdOfProvaVersions(idProva)
     .then((result) => {
         versao.id = result.maxId +1 //> calcula o id da versão
@@ -165,7 +185,6 @@ module.exports.addVersaoToProva = async (idProva, versao) => {
             }
         })
         
-        //todo: continuar a inserção aqui
     }).catch((err) => {
        throw err
     });
@@ -193,25 +212,4 @@ module.exports.provaHasDocente = async (idProva, idDocente) => {
 
     if (verificacao) return {result: true}
     else return {result: false}
-}
-
-/**
- * Devolve as provas por realizar de um aluno. 
-*/
-module.exports.getProvasAlunoNaoRealizadas = async (idAluno) => {
-    //todo
-}
-
-/**
- * Devolve as provas realizadas por aluno. 
-*/
-module.exports.getProvasAlunoRealizadas = async (idAluno) => {
-    //todo
-}
-
-/* 
-Verifica se uma questão de escolha múltipla ou V/F está correcta
-*/
-module.exports.respostaCorrecta = async (idProva, idQuestao, idVersao, opcoesEscolhidas) => {
-    //todo
 }
