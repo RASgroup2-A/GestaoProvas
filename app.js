@@ -9,11 +9,11 @@ dotenv.config();
 
 var mongoose = require('mongoose')
 var mongodb = process.env.MONGODB_URL || `mongodb://127.0.0.1/${process.env.DATABASE}`; //! MONGODB_URL definida no docker-compose
-mongoose.connect(mongodb, {useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.connect(mongodb, { useNewUrlParser: true, useUnifiedTopology: true })
 var db = mongoose.connection
 db.on('error', console.error.bind(console, "MongoDB conection error.."))
-db.on('open', function() {
-  console.log("MongoDB: Conexão estabelecida com sucesso...")
+db.on('open', function () {
+    console.log("MongoDB: Conexão estabelecida com sucesso...")
 })
 
 var indexRouter = require('./routes/index');
