@@ -33,6 +33,18 @@ router.post('/provas', verificaDocenteToken, function (req, res, next) {
         })
 })
 
+// GET de todas as provas
+router.get('/provas', function (req, res, next) {
+    ProvasController.getAllProvas()
+        .then(result => {
+            res.jsonp(result)
+        })
+        .catch(err => {
+            // 500: Internal Server Error
+            res.status(500).jsonp({ msg: err.message });
+        })
+})
+
 //> Rota para verificar se existe uma prova com o nome fornecido (validação de nomes de provas)
 //> funciona
 router.get('/provas/checkname', function (req, res, next) {
