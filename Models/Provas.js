@@ -58,40 +58,4 @@ const provaSchema = new mongoose.Schema({
     }
 }, {collection: 'provas'})
 
-/*
-{
-    _id: String
-    nome: str
-    docentes: [idsDocentes]
-    unidadeCurricular: String
-    retrocesso: bool
-    versões: [
-        {
-            _id: String,
-            numVersao: Int,
-            alunos: [idsAlunos],
-            sala: idSala,
-            data: Datetime,
-            questoes: [
-                {
-                    _id: objid
-                    descricao: String
-                    imagem: bytes
-                    tipo: Int // ajuda no frontend
-                    cotação: Int
-                    desconto: Int
-                    opcoes: [ // escolha múltipla e V/F
-                        {
-                            texto: Str
-                            correcta: bool
-                        }
-                    ]
-                    espaços
-                }
-            ]
-        }
-    ]
-}
-*/
-
 module.exports = mongoose.model('prova', provaSchema)
