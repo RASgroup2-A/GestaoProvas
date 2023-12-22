@@ -3,6 +3,7 @@ const ObjectId = mongoose.Types.ObjectId
 
 const respostaSchema = new mongoose.Schema({
     idQuestao: Number,
+    type: Number,
     cotacao: {
         type: Number,
         default: 0
@@ -11,6 +12,10 @@ const respostaSchema = new mongoose.Schema({
         type: String,
         default: ''
     }, //> resposta aberta escrita pelo aluno, campo opcional
+    respostasEspacos: {
+        type: [String],
+        default: []
+    },
     opcoesEscolhidas:{ 
         type: [Number], //> ids opções marcadas como verdadeiras ou seleccionadas numa escolha múltipla, campo opcional
         default: []

@@ -92,11 +92,32 @@ module.exports.getResolucoesOfProva = (idProva) => {
  * !Não é exportada pelo módulo
  */
 function verificaQuestao(respostaAluno, solucoes) {
-    let opcoesEscolhidas = respostaAluno.opcoesEscolhidas.sort((a, b) => a - b) //> lista de números que identificam as opções marcadas como verdadeiras ou selecionadas numa escolha múltipla
-    let solucao = solucoes.filter(q => q.id === respostaAluno.idQuestao)[0] //> questão relativa à respostaAluno
-    let opcoesCorrectas = solucao.opcoes.filter(q => q.correcta === true).map(q => q.id).sort((a, b) => a - b) //> solução desta questão de escolha múltipla ou VF
-    let estaCorrecta = listasIguais(opcoesCorrectas,opcoesEscolhidas) //> verifica a igualdade entre as opções correctas e as opções marcadas pelo aluno
-    return estaCorrecta ? solucao.cotacao : solucao.desconto
+    
+    if (respostaAluno.type === 1) {
+        let opcoesEscolhidas = respostaAluno.opcoesEscolhidas.sort((a, b) => a - b) //> lista de números que identificam as opções marcadas como verdadeiras ou selecionadas numa escolha múltipla
+        let solucao = solucoes.filter(q => q.id === respostaAluno.idQuestao)[0] //> questão relativa à respostaAluno
+        let opcoesCorrectas = solucao.opcoes.filter(q => q.correcta === true).map(q => q.id).sort((a, b) => a - b) //> solução desta questão de escolha múltipla ou VF,
+        let estaCorrecta = listasIguais(opcoesCorrectas, opcoesEscolhidas) //> verifica a igualdade entre as opções correctas e as opções marcadas pelo aluno
+        return estaCorrecta ? solucao.cotacao : solucao.desconto
+    }else if (respostaAluno.type === 2) {
+
+        let choosenPatterns  = respostaAluno.respostasEspacos
+        let solutionPatterns = solucoes.filter(q => q.id === respostaAluno.idQuestao)[0]
+
+        let right = true
+
+        for (let index = 0; index < choosenPatterns.length; index++) {
+
+            let regex = new RegExp(choosenPatterns[i])
+            
+            right = right && regex.test(solutionPatterns[i])
+            
+        }
+
+        return right
+        
+    }
+    
 }
 
 /**
@@ -104,10 +125,12 @@ function verificaQuestao(respostaAluno, solucoes) {
  * 
  */
 module.exports.corrigeResolucao = async (resolucao) => {
+    
     let idProva = resolucao.idProva
     let idVersao = resolucao.idVersao
     let solucoes = await ProvasController.getQuestoesOfVersaoOfProva(idProva, idVersao)
-    let respostas = resolucao.respostas
+    let respostas = resolucao.respostas // list of respostas
+    
     for (let i = 0; i < respostas.length; i++) {
         let resposta = respostas[i]
         resposta.cotacao = verificaQuestao(resposta, solucoes)
@@ -126,7 +149,7 @@ module.exports.corrigeProva = async (idProva) => {
             let idResolucao = resolucao._id //> tipo: ObjectId
             delete resolucao._id //> para evitar problemas de reescrita de _id no mongodb
             console.log(resolucao)
-            await ResolucoesModel.collection.updateOne({ _id: idResolucao }, {$set: resolucao})
+            await ResolucoesModel.collection.updateOne({ _id: idResolucao }, { $set: resolucao })
         }
         return true
     } catch (error) {
