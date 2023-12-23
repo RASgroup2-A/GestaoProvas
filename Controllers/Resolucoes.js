@@ -91,32 +91,66 @@ module.exports.getResolucoesOfProva = (idProva) => {
  * Verifica se uma resposta de um aluno está correcta. Se estiver, devolve a cotação da pergunta. Se não estiver, devolve o desconto da pergunta.
  * !Não é exportada pelo módulo
  */
-function verificaQuestao(respostaAluno, solucoes) {
+function verificaQuestao(resposta, solucao) {
+    //resposta -> respostaSchema
+    //solucao -> questaoSchema
     
-    if (respostaAluno.type === 1) {
-        let opcoesEscolhidas = respostaAluno.opcoesEscolhidas.sort((a, b) => a - b) //> lista de números que identificam as opções marcadas como verdadeiras ou selecionadas numa escolha múltipla
-        let solucao = solucoes.filter(q => q.id === respostaAluno.idQuestao)[0] //> questão relativa à respostaAluno
-        let opcoesCorrectas = solucao.opcoes.filter(q => q.correcta === true).map(q => q.id).sort((a, b) => a - b) //> solução desta questão de escolha múltipla ou VF,
-        let estaCorrecta = listasIguais(opcoesCorrectas, opcoesEscolhidas) //> verifica a igualdade entre as opções correctas e as opções marcadas pelo aluno
-        return estaCorrecta ? solucao.cotacao : solucao.desconto
-    }else if (respostaAluno.type === 2) {
+    let correta = true
 
-        let choosenPatterns  = respostaAluno.respostasEspacos
-        let solutionPatterns = solucoes.filter(q => q.id === respostaAluno.idQuestao)[0]
+    if (solucao.tipo == 1) {
+        
+        //lista de numeros
+        let opcoesEscolhidas = resposta.opcoesEscolhidas
 
-        let right = true
+        let numCorretas = 0
 
-        for (let index = 0; index < choosenPatterns.length; index++) {
+        //mapa de id's de opcao para bool
+        const optionMap = new Map()
 
-            let regex = new RegExp(choosenPatterns[i])
-            
-            right = right && regex.test(solutionPatterns[i])
-            
+        //itera sobre uma lista de opcaoSchema
+        solucao.opcoes.forEach(element => {
+            optionMap.set(element.id, element.correcta)
+            numCorretas += element.correcta ? 1 : 0
+        });
+
+        if (opcoesEscolhidas.length != numCorretas){
+            correta = false
+        } else {
+            //tem que ter todas corretas para ter a potuaçao
+            opcoesEscolhidas.forEach(element => {
+                correta = correta && optionMap.get(element)
+            });
         }
 
-        return right
+    } else if (solucao.tipo == 2){
+
+        //lista de opcoesSchema
+        let respostasPreencherEspacos = resposta.respostasPreencherEspacos
+        
+        //mapa de id's de opcao para String
+        const patternMap = new Map()
+
+        //itera sobre uma lista de opcaoSchema
+        solucao.opcoes.forEach(element => {
+            
+            optionMap.set(element.id, new RegExp(element.pattern))
+            
+        });
+        
+        if (respostasPreencherEspacos.length != solucao.opcoes.length){
+            correta = false
+        } else {
+            //tem que ter todas corretas para ter a potuaçao
+            respostasPreencherEspacos.forEach(element => {
+                let pattern = optionMap.get(element.idOpcao)
+                correta = correta && pattern.test(element.resposta)
+            });
+        }
         
     }
+    
+    return correta ? solucao.cotacao : solucao.desconto
+        
     
 }
 
@@ -128,12 +162,30 @@ module.exports.corrigeResolucao = async (resolucao) => {
     
     let idProva = resolucao.idProva
     let idVersao = resolucao.idVersao
-    let solucoes = await ProvasController.getQuestoesOfVersaoOfProva(idProva, idVersao)
+    
+    //lista de questaoSchema
+    let questoes = await ProvasController.getQuestoesOfVersaoOfProva(idProva, idVersao)
+
+    //mapa de id's de questao para questaoSchema
+    const solMap = new Map()
+
+    //copiar todos os elemtos para um mapa 
+    //para evitar filtrar todos os ciclos
+    questoes.forEach(element => {
+        solMap.set(element.id, element)
+    });
+    
+    //lista de respostaSchema
     let respostas = resolucao.respostas // list of respostas
     
     for (let i = 0; i < respostas.length; i++) {
+        //respostaSchema
         let resposta = respostas[i]
-        resposta.cotacao = verificaQuestao(resposta, solucoes)
+
+        //questaoSchema
+        let solucao = solMap.get(resposta.idQuestao)
+            
+        resposta.cotacao = verificaQuestao(resposta, solucao)
     }
 }
 

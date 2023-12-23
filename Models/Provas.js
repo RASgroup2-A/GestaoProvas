@@ -8,7 +8,7 @@ const opcaoSchema = new mongoose.Schema({
     correcta: Boolean,
     pattern: {
         type: String,
-        default: ""
+        default: "" // -> regex com a solucao
     },
 })
 

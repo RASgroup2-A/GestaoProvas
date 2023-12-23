@@ -1,6 +1,11 @@
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 
+const preencherEspacosSchema = new mongoose.Schema({
+    idOpcao: Number,
+    resposta: String
+})
+
 const respostaSchema = new mongoose.Schema({
     idQuestao: Number,
     type: Number,
@@ -12,11 +17,11 @@ const respostaSchema = new mongoose.Schema({
         type: String,
         default: ''
     }, //> resposta aberta escrita pelo aluno, campo opcional
-    respostasEspacos: {
-        type: [String],
+    respostasPreencherEspacos: { //> aqui a ordem é importante por isso deve precisar de um id
+        type: [preencherEspacosSchema],
         default: []
     },
-    opcoesEscolhidas:{ 
+    opcoesEscolhidas: {
         type: [Number], //> ids opções marcadas como verdadeiras ou seleccionadas numa escolha múltipla, campo opcional
         default: []
     },
@@ -28,7 +33,7 @@ const resolucaoSchema = new mongoose.Schema({
     idProva: String,
     idVersao: Number,
     respostas: [respostaSchema]
-}, {collection: 'resolucoes'})
+}, { collection: 'resolucoes' })
 
 module.exports = mongoose.model('resolucao', resolucaoSchema)
 
