@@ -98,6 +98,7 @@ function verificaQuestao(resposta, solucao) {
     let correta = true
 
     if (solucao.tipo == 1) {
+        console.log("questao do tipo 1")
         
         //lista de numeros
         let opcoesEscolhidas = resposta.opcoesEscolhidas
@@ -123,6 +124,7 @@ function verificaQuestao(resposta, solucao) {
         }
 
     } else if (solucao.tipo == 2){
+        console.log("questao do tipo 2")
 
         //lista de opcoesSchema
         let respostasPreencherEspacos = resposta.respostasPreencherEspacos
@@ -133,7 +135,7 @@ function verificaQuestao(resposta, solucao) {
         //itera sobre uma lista de opcaoSchema
         solucao.opcoes.forEach(element => {
             
-            optionMap.set(element.id, new RegExp(element.pattern))
+            patternMap.set(element.id, new RegExp(element.pattern))
             
         });
         
@@ -142,13 +144,27 @@ function verificaQuestao(resposta, solucao) {
         } else {
             //tem que ter todas corretas para ter a potuaçao
             respostasPreencherEspacos.forEach(element => {
-                let pattern = optionMap.get(element.idOpcao)
+                
+                let pattern = patternMap.get(element.idOpcao)
+
+                console.log("pattern:")
+                console.log(pattern)
+                
+                console.log("resposta:")
+                console.log(element.resposta)
+
+                console.log("regex test:")
+                console.log(pattern.test(element.resposta))
+
                 correta = correta && pattern.test(element.resposta)
+                
             });
         }
         
     }
-    
+
+    console.log(correta ? solucao.cotacao : solucao.desconto)    
+
     return correta ? solucao.cotacao : solucao.desconto
         
     
@@ -162,9 +178,14 @@ module.exports.corrigeResolucao = async (resolucao) => {
     
     let idProva = resolucao.idProva
     let idVersao = resolucao.idVersao
+
+    console.log(idProva)
+    console.log(idVersao)
     
     //lista de questaoSchema
     let questoes = await ProvasController.getQuestoesOfVersaoOfProva(idProva, idVersao)
+
+    console.log(questoes)
 
     //mapa de id's de questao para questaoSchema
     const solMap = new Map()

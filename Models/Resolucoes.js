@@ -8,7 +8,6 @@ const preencherEspacosSchema = new mongoose.Schema({
 
 const respostaSchema = new mongoose.Schema({
     idQuestao: Number,
-    type: Number,
     cotacao: {
         type: Number,
         default: 0
