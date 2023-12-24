@@ -34,7 +34,8 @@ const versaoSchema = new mongoose.Schema({
         default: []
     },
     sala: String,
-    data: Date,
+    data: String,
+    duracao: Number, // em minutos
     questoes: {
         type: [questaoSchema],
         default: []
