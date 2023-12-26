@@ -165,7 +165,7 @@ router.get('/provas/:idProva/resolucoes/aluno/:idAluno/nota', function (req, res
 
     ResolucoesController.getNotaProvaAluno(idProva, idAluno)
         .then((_) => {
-            res.jsonp({ msg: `Prova: ${idProva} corrigida com sucesso!` }) //NOTE: fix this
+            res.jsonp({ msg: `Nota do Aluno: ${idAluno} para a Prova: ${idProva} calculada com sucesso!` }) //NOTE: fix this
         }).catch((err) => {
             res.status(500).jsonp({ msg: err.message });
         });

@@ -31,6 +31,10 @@ const resolucaoSchema = new mongoose.Schema({
     idAluno: String,
     idProva: String,
     idVersao: Number,
+    nota: {
+        type: Number,
+        default: 0
+    },
     respostas: [respostaSchema]
 }, { collection: 'resolucoes' })
 

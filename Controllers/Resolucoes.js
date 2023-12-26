@@ -1,5 +1,6 @@
 const ProvasController = require('./Provas')
 const ResolucoesModel = require('../Models/Resolucoes');
+const Resolucoes = require('../Models/Resolucoes');
 const ObjectId = require('mongoose').Types.ObjectId;
 
 //! FUNÇÕES AUXILIARES
@@ -46,6 +47,7 @@ Regista uma resolução na base de dados
 */
 module.exports.addResolucao = (resolucao) => {
     resolucao.respostas = resolucao.respostas || [] //> para evitar que a resolução não tenha o campo respostas
+    resolucao.nota = resolucao.nota || 0
     let respostas = resolucao.respostas
     for (let i = 1; i <= respostas.length; i++) {
         let resposta = respostas[i - 1]
@@ -249,7 +251,7 @@ function getCotacoesProvaAluno(idProva, idAluno){
     return ResolucoesModel.aggregate([
         {$match: {idAluno: idAluno, idProva: idProva}},
         {$project: {respostas: 1, _id:0}},
-        {$unwind: "$respostas"},
+        // {$unwind: "$respostas"},
     ]).then(result => {
         //> Output no formato: {maxId: X}
         if (!result || result.length === 0) { //> No caso de ainda não haver uma versão
@@ -265,15 +267,26 @@ function getCotacoesProvaAluno(idProva, idAluno){
 module.exports.getNotaProvaAluno = async (idProva, idAluno) => {
     try {
 
-        let list = await getCotacoesProvaAluno(idProva, idAluno)
-
-        // let list = await ResolucoesModel.find({idAluno: idAluno, idProva: idProva}, {respostas:1, _id:0})[0]
+        // let list = await getCotacoesProvaAluno(idProva, idAluno)
+        let list = await ResolucoesModel.findOne({idAluno: idAluno, idProva: idProva})
 
         console.log(list)
 
-        list.forEach(element => {
-            console.log(element.respostas.cotacao)
+        let nota = 0
+
+        list.respostas.forEach(element => {
+            nota += element.cotacao
         });
+
+        console.log(nota)
+
+        if (nota < 0) return 0
+
+        if (nota > 200) return 200
+
+        ResolucoesModel.collection.updateOne({_id: list._id}, {$set: {nota: nota}})
+
+        return nota
 
     } catch (error) {
         throw error
