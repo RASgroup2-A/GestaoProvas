@@ -86,6 +86,79 @@ module.exports.getResolucoesOfProva = (idProva) => {
     return ResolucoesModel.collection.find({ idProva: idProva }).toArray()
 }
 
+function verificaQuestaoTipo1(resposta, solucao) {
+    console.log("questao do tipo 1")
+
+    let correta = true
+
+    //lista de numeros
+    let opcoesEscolhidas = resposta.opcoesEscolhidas
+
+    let numCorretas = 0
+
+    //mapa de id's de opcao para bool
+    const optionMap = new Map()
+
+    //itera sobre uma lista de opcaoSchema
+    solucao.opcoes.forEach(element => {
+        optionMap.set(element.id, element.correcta)
+        numCorretas += element.correcta ? 1 : 0
+    });
+
+    if (opcoesEscolhidas.length != numCorretas) {
+        correta = false
+    } else {
+        //tem que ter todas corretas para ter a potuaçao
+        opcoesEscolhidas.forEach(element => {
+            correta = correta && optionMap.get(element)
+        });
+    }
+    return correta
+}
+
+function verificaQuestaoTipo2(resposta, solucao) {
+    
+    console.log("questao do tipo 2")
+
+    let correta = true
+
+    //lista de opcoesSchema
+    let respostasPreencherEspacos = resposta.respostasPreencherEspacos
+
+    //mapa de id's de opcao para String
+    const patternMap = new Map()
+
+    //itera sobre uma lista de opcaoSchema
+    solucao.opcoes.forEach(element => {
+
+        patternMap.set(element.id, new RegExp(element.pattern))
+
+    });
+
+    if (respostasPreencherEspacos.length != solucao.opcoes.length) {
+        correta = false
+    } else {
+        //tem que ter todas corretas para ter a potuaçao
+        respostasPreencherEspacos.forEach(element => {
+
+            let pattern = patternMap.get(element.idOpcao)
+
+            console.log("pattern:")
+            console.log(pattern)
+
+            console.log("resposta:")
+            console.log(element.resposta)
+
+            console.log("regex test:")
+            console.log(pattern.test(element.resposta))
+
+            correta = correta && pattern.test(element.resposta)
+
+        });
+    }
+    return correta
+}
+
 
 /**
  * Verifica se uma resposta de um aluno está correcta. Se estiver, devolve a cotação da pergunta. Se não estiver, devolve o desconto da pergunta.
@@ -98,76 +171,17 @@ function verificaQuestao(resposta, solucao) {
     let correta = true
 
     if (solucao.tipo == 1) {
-        console.log("questao do tipo 1")
-        
-        //lista de numeros
-        let opcoesEscolhidas = resposta.opcoesEscolhidas
+        correta = verificaQuestaoTipo1(resposta, solucao)
 
-        let numCorretas = 0
-
-        //mapa de id's de opcao para bool
-        const optionMap = new Map()
-
-        //itera sobre uma lista de opcaoSchema
-        solucao.opcoes.forEach(element => {
-            optionMap.set(element.id, element.correcta)
-            numCorretas += element.correcta ? 1 : 0
-        });
-
-        if (opcoesEscolhidas.length != numCorretas){
-            correta = false
-        } else {
-            //tem que ter todas corretas para ter a potuaçao
-            opcoesEscolhidas.forEach(element => {
-                correta = correta && optionMap.get(element)
-            });
-        }
-
-    } else if (solucao.tipo == 2){
-        console.log("questao do tipo 2")
-
-        //lista de opcoesSchema
-        let respostasPreencherEspacos = resposta.respostasPreencherEspacos
-        
-        //mapa de id's de opcao para String
-        const patternMap = new Map()
-
-        //itera sobre uma lista de opcaoSchema
-        solucao.opcoes.forEach(element => {
-            
-            patternMap.set(element.id, new RegExp(element.pattern))
-            
-        });
-        
-        if (respostasPreencherEspacos.length != solucao.opcoes.length){
-            correta = false
-        } else {
-            //tem que ter todas corretas para ter a potuaçao
-            respostasPreencherEspacos.forEach(element => {
-                
-                let pattern = patternMap.get(element.idOpcao)
-
-                console.log("pattern:")
-                console.log(pattern)
-                
-                console.log("resposta:")
-                console.log(element.resposta)
-
-                console.log("regex test:")
-                console.log(pattern.test(element.resposta))
-
-                correta = correta && pattern.test(element.resposta)
-                
-            });
-        }
-        
+    } else if (solucao.tipo == 2) {
+        correta = verificaQuestaoTipo2(resposta, solucao)
     }
 
-    console.log(correta ? solucao.cotacao : solucao.desconto)    
+    console.log(correta ? solucao.cotacao : solucao.desconto)
 
     return correta ? solucao.cotacao : solucao.desconto
-        
-    
+
+
 }
 
 /**
@@ -175,13 +189,13 @@ function verificaQuestao(resposta, solucao) {
  * 
  */
 module.exports.corrigeResolucao = async (resolucao) => {
-    
+
     let idProva = resolucao.idProva
     let idVersao = resolucao.idVersao
 
     console.log(idProva)
     console.log(idVersao)
-    
+
     //lista de questaoSchema
     let questoes = await ProvasController.getQuestoesOfVersaoOfProva(idProva, idVersao)
 
@@ -195,17 +209,17 @@ module.exports.corrigeResolucao = async (resolucao) => {
     questoes.forEach(element => {
         solMap.set(element.id, element)
     });
-    
+
     //lista de respostaSchema
     let respostas = resolucao.respostas // list of respostas
-    
+
     for (let i = 0; i < respostas.length; i++) {
         //respostaSchema
         let resposta = respostas[i]
 
         //questaoSchema
         let solucao = solMap.get(resposta.idQuestao)
-            
+
         resposta.cotacao = verificaQuestao(resposta, solucao)
     }
 }
