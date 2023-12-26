@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const ProvasController = require('../Controllers/Provas');
 const ResolucoesController = require('../Controllers/Resolucoes');
+const Resolucoes = require('../Models/Resolucoes');
 
 function verificaDocenteToken(req, res, next) {
     var token = req.body.token;
@@ -153,6 +154,22 @@ router.get('/provas/:idProva/resolucoes/correcaoAuto', function (req, res, next)
         }).catch((err) => {
             res.status(500).jsonp({ msg: err.message });
         });
+})
+
+//> Rota para obter a nota de uma resposta de uma prova de um aluno
+//
+router.get('/provas/:idProva/resolucoes/aluno/:idAluno/nota', function (req, res, next) {
+
+    let idProva = req.params.idProva
+    let idAluno = req.params.idAluno
+
+    ResolucoesController.getNotaProvaAluno(idProva, idAluno)
+        .then((_) => {
+            res.jsonp({ msg: `Prova: ${idProva} corrigida com sucesso!` }) //NOTE: fix this
+        }).catch((err) => {
+            res.status(500).jsonp({ msg: err.message });
+        });
+    
 })
 
 //! ROTA PARA DEBUG E TESTES
