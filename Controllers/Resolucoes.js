@@ -247,23 +247,6 @@ module.exports.corrigeProva = async (idProva) => {
 
 }
 
-function getCotacoesProvaAluno(idProva, idAluno){
-    return ResolucoesModel.aggregate([
-        {$match: {idAluno: idAluno, idProva: idProva}},
-        {$project: {respostas: 1, _id:0}},
-        // {$unwind: "$respostas"},
-    ]).then(result => {
-        //> Output no formato: {maxId: X}
-        if (!result || result.length === 0) { //> No caso de ainda não haver uma versão
-            return { maxId: 0 }
-        } else {
-            return result
-        }
-    }).catch((err) => {
-        throw err
-    });
-}
-
 module.exports.getNotaProvaAluno = async (idProva, idAluno) => {
     try {
 
