@@ -255,8 +255,29 @@ module.exports.getProvasRealizadasAluno = async (numMecAluno) => {
     return await ProvasModel.aggregate([
         {
             $match: {
-                "versoes.alunos": numMecAluno,
-                "versoes.data": { $lt: agora.toISOString().replace('T', ' ').substring(0, 16) }
+                "versoes.alunos": numMecAluno
+            }
+        },
+        {$unwind: "$versoes"},
+        {
+            $match: {
+                $expr: {
+                    $lt: [
+                        { $add: [{ $toDate: "$versoes.data" }, { $multiply: ["$versoes.duracao", 60000] }] },
+                        new Date()
+                    ]
+                }
+            }
+        },
+        {
+            $group: {
+                _id: "$_id",
+                nome: { $first: "$nome" },
+                docentes: { $first: "$docentes" },
+                unidadeCurricular: { $first: "$unidadeCurricular" },
+                retrocesso: { $first: "$retrocesso" },
+                aleatorizacao: { $first: "$aleatorizacao" },
+                versoes: { $push: "$versoes" }
             }
         },
         {
@@ -266,17 +287,14 @@ module.exports.getProvasRealizadasAluno = async (numMecAluno) => {
                 unidadeCurricular: 1,
                 retrocesso: 1,
                 aleatorizacao: 1,
-                versoes: {
-                    $filter: {
-                        input: "$versoes",
-                        as: "versao",
-                        cond: {
-                            $and: [
-                                { $lt: ["$$versao.data", agora.toISOString().replace('T', ' ').substring(0, 16)] },
-                                { $in: [numMecAluno, "$$versao.alunos"] }
-                            ]
+                versao: {
+                    $arrayElemAt: [{
+                        $filter: {
+                            input: "$versoes",
+                            as: "versao",
+                            cond: { $in: [numMecAluno, "$$versao.alunos"] }
                         }
-                    }
+                    }, 0]
                 }
             }
         }
