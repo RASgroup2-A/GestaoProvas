@@ -214,6 +214,75 @@ module.exports.provaHasDocente = async (idProva, idDocente) => {
     else return { result: false }
 }
 
+module.exports.getProvasNaoRealizadasAluno = async (numMecAluno) => {
+    let agora = new Date()
+    return await ProvasModel.aggregate([
+        {
+            $match: {
+                "versoes.alunos": numMecAluno,
+                "versoes.data": { $gt: agora.toISOString().replace('T', ' ').substring(0, 16) }
+            }
+        },
+        {
+            $project: {
+                nome: 1,
+                docentes: 1,
+                unidadeCurricular: 1,
+                retrocesso: 1,
+                aleatorizacao: 1,
+                versao: {
+                    $arrayElemAt: [{
+                        $filter: {
+                            input: "$versoes",
+                            as: "versao",
+                            cond: {
+                                $and: [
+                                    { $gt: ["$$versao.data", agora.toISOString().replace('T', ' ').substring(0, 16)] },
+                                    { $in: [numMecAluno, "$$versao.alunos"] } // Verifica se o aluno está inscrito nesta versão
+                                ]
+                            }
+                        }
+                    }, 0]
+                }
+            }
+        }
+    ])
+}
+
+module.exports.getProvasRealizadasAluno = async (numMecAluno) => {
+    let agora = new Date()
+    agora.setMinutes(agora.getMinutes() - 90);
+    return await ProvasModel.aggregate([
+        {
+            $match: {
+                "versoes.alunos": numMecAluno,
+                "versoes.data": { $lt: agora.toISOString().replace('T', ' ').substring(0, 16) }
+            }
+        },
+        {
+            $project: {
+                nome: 1,
+                docentes: 1,
+                unidadeCurricular: 1,
+                retrocesso: 1,
+                aleatorizacao: 1,
+                versoes: {
+                    $filter: {
+                        input: "$versoes",
+                        as: "versao",
+                        cond: {
+                            $and: [
+                                { $lt: ["$$versao.data", agora.toISOString().replace('T', ' ').substring(0, 16)] },
+                                { $in: [numMecAluno, "$$versao.alunos"] }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    ])
+}
+
 /*
 Devolve todas as provas com o seu id
 */

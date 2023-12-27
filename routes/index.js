@@ -155,6 +155,27 @@ router.get('/provas/:idProva/resolucoes/correcaoAuto', function (req, res, next)
         });
 })
 
+router.get('/provas/alunos/:numMecAluno/naoRealizadas', function (req, res, next) {
+    let numMecAluno = req.params.numMecAluno
+    ProvasController.getProvasNaoRealizadasAluno(numMecAluno)
+        .then((result) => {
+            res.jsonp(result)
+        }).catch((err) => {
+            console.error(err)
+            res.status(500).jsonp({ msg: err.message })
+        });
+})
+
+router.get('/provas/alunos/:numMecAluno/realizadas', function (req, res, next) {
+    let numMecAluno = req.params.numMecAluno
+    ProvasController.getProvasRealizadasAluno(numMecAluno)
+        .then((result) => {
+            res.jsonp(result)
+        }).catch((err) => {
+            res.status(500).jsonp({ msg: err.message })
+        });
+})
+
 //! ROTA PARA DEBUG E TESTES
 router.get('/debug', function (req, res, next) {
     ProvasController.biggestIdOfProvaVersions('656e5d1eab78269718bbbe1d')
