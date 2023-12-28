@@ -96,7 +96,7 @@ function verificaQuestao(respostaAluno, solucoes) {
     let solucao = solucoes.filter(q => q.id === respostaAluno.idQuestao)[0] //> questão relativa à respostaAluno
     let opcoesCorrectas = solucao.opcoes.filter(q => q.correcta === true).map(q => q.id).sort((a, b) => a - b) //> solução desta questão de escolha múltipla ou VF
     let estaCorrecta = listasIguais(opcoesCorrectas,opcoesEscolhidas) //> verifica a igualdade entre as opções correctas e as opções marcadas pelo aluno
-    return estaCorrecta ? solucao.cotacao : solucao.desconto
+    return estaCorrecta ? solucao.cotacao : -Math.abs(solucao.desconto)
 }
 
 /**
