@@ -1,4 +1,5 @@
 const ProvasModel = require('../Models/Provas');
+const ResolucoesModel = require('../Models/Resolucoes'); /*
 const ObjectId = require('mongoose').Types.ObjectId;
 
 /* 
@@ -216,7 +217,7 @@ module.exports.provaHasDocente = async (idProva, idDocente) => {
 
 module.exports.getProvasNaoRealizadasAluno = async (numMecAluno) => {
     let agora = new Date()
-    return await ProvasModel.aggregate([
+    let provas = await ProvasModel.aggregate([
         {
             $match: {
                 "versoes.alunos": numMecAluno,
@@ -247,6 +248,10 @@ module.exports.getProvasNaoRealizadasAluno = async (numMecAluno) => {
             }
         }
     ])
+    let resolucoesAluno = await ResolucoesModel.find({idAluno: numMecAluno})
+    let provasResolvidasAluno = resolucoesAluno.map(resolucao => resolucao.idProva)
+    provas.forEach(prova => prova._id = prova._id.toString())
+    return provas.filter(prova => !provasResolvidasAluno.includes(prova._id.toString()))
 }
 
 module.exports.getProvasRealizadasAluno = async (numMecAluno) => {

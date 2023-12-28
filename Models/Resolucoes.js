@@ -26,23 +26,3 @@ const resolucaoSchema = new mongoose.Schema({
 }, {collection: 'resolucoes'})
 
 module.exports = mongoose.model('resolucao', resolucaoSchema)
-
-/*
-{
-    idAluno: ObjectId
-    idProva: objectid
-    idVersao: objectid
-    respostas: [
-        {
-            idQuestao: objectid
-            cotacao: int
-            respostaAberta: String, // resposta aberta escrita pelo aluno
-            opcoesEscolhidas: [
-                {
-                    text
-                }
-            ]
-        }
-    ]
-}
-*/
