@@ -129,6 +129,20 @@ router.get('/provas/resolucoes/aluno/:idAluno', function (req, res, next) {
         })
 })
 
+//> Rota para obter as resoluções de um aluno a uma dada prova que realizou
+//> parece funcionar
+router.get('/provas/resolucoes/aluno/:idAluno/:idProva', function (req, res, next) {
+    let idAluno = req.params.idAluno
+    let idProva = req.params.idProva
+    ResolucoesController.getResolucaoOfAluno(idAluno,idProva)
+        .then(result => {
+            res.jsonp(result)
+        })
+        .catch(err => {
+            res.status(500).jsonp({ msg: err.message });
+        })
+})
+
 //> Rota para adicionar uma resposta de um aluno a uma resolução
 //> Parece funcionar
 router.post('/provas/:idProva/resolucoes/aluno/:idAluno/respostas', function (req, res, next) {

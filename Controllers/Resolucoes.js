@@ -65,6 +65,13 @@ module.exports.getResolucoesOfAluno = (idAluno) => {
 }
 
 /**
+ * Devolve as resolucoes de um aluno a uma prova
+ */
+ module.exports.getResolucaoOfAluno = (idAluno,idProva) => {
+    return ResolucoesModel.collection.find({ idAluno: idAluno, idProva:idProva }).toArray()
+}
+
+/**
  * Adiciona uma resposta de um aluno à resolução de um aluno.
  */
 module.exports.addRespostaToResolucao = (idAluno, idProva, resposta) => {
