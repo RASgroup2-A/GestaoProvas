@@ -68,7 +68,9 @@ module.exports.getResolucoesOfAluno = (idAluno) => {
  * Devolve as resolucoes de um aluno a uma prova
  */
  module.exports.getResolucaoOfAluno = (idAluno,idProva) => {
-    return ResolucoesModel.collection.find({ idAluno: idAluno, idProva:idProva }).toArray()
+    console.log(idAluno);
+    console.log(idProva);
+    return ResolucoesModel.findOne({ idAluno: idAluno, idProva:idProva })
 }
 
 /**

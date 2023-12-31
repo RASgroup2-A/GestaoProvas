@@ -1,6 +1,6 @@
 const ProvasModel = require('../Models/Provas');
-const ResolucoesModel = require('../Models/Resolucoes'); /*
-const ObjectId = require('mongoose').Types.ObjectId;
+const ResolucoesModel = require('../Models/Resolucoes');
+const mongoose = require('mongoose');
 
 /* 
 Obtém uma prova dado o seu id.
@@ -25,20 +25,14 @@ module.exports.getProva = async (id) => {
  * Obtém as questões de uma versão de uma prova
  */
 module.exports.getQuestoesOfVersaoOfProva = (idProva, idVersao) => {
-    return ProvasModel.aggregate([
-        { $match: { _id: new ObjectId(idProva) } },
-        { $project: { _id: 0, versoes: 1 } },
-        { $unwind: "$versoes" },
-        { $match: { 'versoes.id': idVersao } },
-        { $project: { 'versoes.questoes': 1 } },
-        { $unwind: "$versoes.questoes" },
-        { $replaceRoot: { newRoot: "$versoes.questoes" } }
-    ])
-        .then((result) => {
+    return ProvasModel.aggregate([{$match:{"_id":new mongoose.Types.ObjectId(idProva)}},
+    {$unwind:{path:"$versoes"}},
+    {$match:{"versoes.numVersao":parseInt(idVersao)}},
+    {$project:{"versoes.questoes":1}}]).then((result) => {
             return result
         }).catch((err) => {
             throw err
-        });
+    });
 }
 
 /* 
