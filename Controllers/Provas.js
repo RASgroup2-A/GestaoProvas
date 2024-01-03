@@ -1,5 +1,6 @@
 const ProvasModel = require('../Models/Provas');
-const ObjectId = require('mongoose').Types.ObjectId;
+const ResolucoesModel = require('../Models/Resolucoes');
+const mongoose = require('mongoose');
 
 /* 
 Obtém uma prova dado o seu id.
@@ -24,20 +25,14 @@ module.exports.getProva = async (id) => {
  * Obtém as questões de uma versão de uma prova
  */
 module.exports.getQuestoesOfVersaoOfProva = (idProva, idVersao) => {
-    return ProvasModel.aggregate([
-        { $match: { _id: new ObjectId(idProva) } },
-        { $project: { _id: 0, versoes: 1 } },
-        { $unwind: "$versoes" },
-        { $match: { 'versoes.id': idVersao } },
-        { $project: { 'versoes.questoes': 1 } },
-        { $unwind: "$versoes.questoes" },
-        { $replaceRoot: { newRoot: "$versoes.questoes" } }
-    ])
-        .then((result) => {
+    return ProvasModel.aggregate([{$match:{"_id":new mongoose.Types.ObjectId(idProva)}},
+    {$unwind:{path:"$versoes"}},
+    {$match:{"versoes.numVersao":parseInt(idVersao)}},
+    {$project:{"versoes.questoes":1}}]).then((result) => {
             return result
         }).catch((err) => {
             throw err
-        });
+    });
 }
 
 /* 
@@ -212,6 +207,97 @@ module.exports.provaHasDocente = async (idProva, idDocente) => {
 
     if (verificacao) return { result: true }
     else return { result: false }
+}
+
+module.exports.getProvasNaoRealizadasAluno = async (numMecAluno) => {
+    let agora = new Date()
+    let provas = await ProvasModel.aggregate([
+        {
+            $match: {
+                "versoes.alunos": numMecAluno,
+                "versoes.data": { $gt: agora.toISOString().replace('T', ' ').substring(0, 16) }
+            }
+        },
+        {
+            $project: {
+                nome: 1,
+                docentes: 1,
+                unidadeCurricular: 1,
+                retrocesso: 1,
+                aleatorizacao: 1,
+                versao: {
+                    $arrayElemAt: [{
+                        $filter: {
+                            input: "$versoes",
+                            as: "versao",
+                            cond: {
+                                $and: [
+                                    { $gt: ["$$versao.data", agora.toISOString().replace('T', ' ').substring(0, 16)] },
+                                    { $in: [numMecAluno, "$$versao.alunos"] } // Verifica se o aluno está inscrito nesta versão
+                                ]
+                            }
+                        }
+                    }, 0]
+                }
+            }
+        }
+    ])
+    let resolucoesAluno = await ResolucoesModel.find({idAluno: numMecAluno})
+    let provasResolvidasAluno = resolucoesAluno.map(resolucao => resolucao.idProva)
+    provas.forEach(prova => prova._id = prova._id.toString())
+    return provas.filter(prova => !provasResolvidasAluno.includes(prova._id.toString()))
+}
+
+module.exports.getProvasRealizadasAluno = async (numMecAluno) => {
+    let agora = new Date()
+    agora.setMinutes(agora.getMinutes() - 90);
+    return await ProvasModel.aggregate([
+        {
+            $match: {
+                "versoes.alunos": numMecAluno
+            }
+        },
+        {$unwind: "$versoes"},
+        {
+            $match: {
+                $expr: {
+                    $lt: [
+                        { $add: [{ $toDate: "$versoes.data" }, { $multiply: ["$versoes.duracao", 60000] }] },
+                        new Date()
+                    ]
+                }
+            }
+        },
+        {
+            $group: {
+                _id: "$_id",
+                nome: { $first: "$nome" },
+                docentes: { $first: "$docentes" },
+                unidadeCurricular: { $first: "$unidadeCurricular" },
+                retrocesso: { $first: "$retrocesso" },
+                aleatorizacao: { $first: "$aleatorizacao" },
+                versoes: { $push: "$versoes" }
+            }
+        },
+        {
+            $project: {
+                nome: 1,
+                docentes: 1,
+                unidadeCurricular: 1,
+                retrocesso: 1,
+                aleatorizacao: 1,
+                versao: {
+                    $arrayElemAt: [{
+                        $filter: {
+                            input: "$versoes",
+                            as: "versao",
+                            cond: { $in: [numMecAluno, "$$versao.alunos"] }
+                        }
+                    }, 0]
+                }
+            }
+        }
+    ])
 }
 
 /*

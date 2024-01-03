@@ -129,6 +129,20 @@ router.get('/provas/resolucoes/aluno/:idAluno', function (req, res, next) {
         })
 })
 
+//> Rota para obter as resoluções de um aluno a uma dada prova que realizou
+//> parece funcionar
+router.get('/provas/resolucoes/aluno/:idAluno/:idProva', function (req, res, next) {
+    let idAluno = req.params.idAluno
+    let idProva = req.params.idProva
+    ResolucoesController.getResolucaoOfAluno(idAluno,idProva)
+        .then(result => {
+            res.jsonp(result)
+        })
+        .catch(err => {
+            res.status(500).jsonp({ msg: err.message });
+        })
+})
+
 //> Rota para adicionar uma resposta de um aluno a uma resolução
 //> Parece funcionar
 router.post('/provas/:idProva/resolucoes/aluno/:idAluno/respostas', function (req, res, next) {
@@ -152,6 +166,38 @@ router.get('/provas/:idProva/resolucoes/correcaoAuto', function (req, res, next)
             res.jsonp({ msg: `Prova: ${idProva} corrigida com sucesso!` })
         }).catch((err) => {
             res.status(500).jsonp({ msg: err.message });
+        });
+})
+
+router.get('/provas/alunos/:numMecAluno/naoRealizadas', function (req, res, next) {
+    let numMecAluno = req.params.numMecAluno
+    ProvasController.getProvasNaoRealizadasAluno(numMecAluno)
+        .then((result) => {
+            res.jsonp(result)
+        }).catch((err) => {
+            console.error(err)
+            res.status(500).jsonp({ msg: err.message })
+        });
+})
+
+router.get('/provas/alunos/:numMecAluno/realizadas', function (req, res, next) {
+    let numMecAluno = req.params.numMecAluno
+    ProvasController.getProvasRealizadasAluno(numMecAluno)
+        .then((result) => {
+            res.jsonp(result)
+        }).catch((err) => {
+            res.status(500).jsonp({ msg: err.message })
+        });
+})
+
+router.get('/provas/questoes/:idProva/:versao', function (req, res, next) {
+    let idProva = req.params.idProva
+    let versao = req.params.versao
+    ProvasController.getQuestoesOfVersaoOfProva(idProva,versao)
+        .then((result) => {
+            res.jsonp(result)
+        }).catch((err) => {
+            res.status(500).jsonp({ msg: err.message })
         });
 })
 
