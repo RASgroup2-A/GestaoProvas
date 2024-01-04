@@ -134,7 +134,6 @@ module.exports.corrigeProva = async (idProva) => {
             await this.corrigeResolucao(resolucao)
             let idResolucao = resolucao._id //> tipo: ObjectId
             delete resolucao._id //> para evitar problemas de reescrita de _id no mongodb
-            console.log(resolucao)
             await ResolucoesModel.collection.updateOne({ _id: idResolucao }, {$set: resolucao})
         }
         return true
