@@ -1,6 +1,7 @@
 const ProvasModel = require('../Models/Provas');
 const ResolucoesModel = require('../Models/Resolucoes');
 const mongoose = require('mongoose');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 /* 
 Obtém uma prova dado o seu id.
@@ -249,25 +250,16 @@ module.exports.getProvasNaoRealizadasAluno = async (numMecAluno) => {
 }
 
 module.exports.getProvasRealizadasAluno = async (numMecAluno) => {
-    let agora = new Date()
-    agora.setMinutes(agora.getMinutes() - 90);
+    let provasRealizadasIDS = await ResolucoesModel.collection.find({idAluno: numMecAluno}).toArray()
+    provasRealizadasIDS = provasRealizadasIDS.map(prova => new ObjectId(prova.idProva))
     return await ProvasModel.aggregate([
         {
             $match: {
+                _id: {$in: provasRealizadasIDS},
                 "versoes.alunos": numMecAluno
             }
         },
         {$unwind: "$versoes"},
-        {
-            $match: {
-                $expr: {
-                    $lt: [
-                        { $add: [{ $toDate: "$versoes.data" }, { $multiply: ["$versoes.duracao", 60000] }] },
-                        new Date()
-                    ]
-                }
-            }
-        },
         {
             $group: {
                 _id: "$_id",
@@ -298,6 +290,7 @@ module.exports.getProvasRealizadasAluno = async (numMecAluno) => {
             }
         }
     ])
+
 }
 
 /*
