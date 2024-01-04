@@ -87,8 +87,6 @@ module.exports.getResolucoesOfProva = (idProva) => {
 }
 
 function verificaQuestaoTipo1(resposta, solucao) {
-    console.log("questao do tipo 1")
-
     let correta = true
 
     //lista de numeros
@@ -172,11 +170,7 @@ function verificaQuestao(resposta, solucao) {
 
     correta = verificaQuestaoTipo1(resposta, solucao)
 
-    console.log(correta ? solucao.cotacao : solucao.desconto)
-
     return correta ? solucao.cotacao : solucao.desconto
-
-
 }
 
 /**
@@ -188,13 +182,8 @@ module.exports.corrigeResolucao = async (resolucao) => {
     let idProva = resolucao.idProva
     let idVersao = resolucao.idVersao
 
-    console.log(idProva)
-    console.log(idVersao)
-
     //lista de questaoSchema
-    let questoes = await ProvasController.getQuestoesOfVersaoOfProva(idProva, idVersao)
-
-    console.log(questoes)
+    let questoes = await ProvasController.getQuestoesOfVersaoOfProvaUnwound(idProva, idVersao)
 
     //mapa de id's de questao para questaoSchema
     const solMap = new Map()
@@ -230,7 +219,6 @@ module.exports.corrigeProva = async (idProva) => {
             await this.corrigeResolucao(resolucao)
             let idResolucao = resolucao._id //> tipo: ObjectId
             delete resolucao._id //> para evitar problemas de reescrita de _id no mongodb
-            console.log(resolucao)
             await ResolucoesModel.collection.updateOne({ _id: idResolucao }, { $set: resolucao })
         }
         return true
