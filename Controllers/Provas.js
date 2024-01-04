@@ -1,6 +1,7 @@
 const ProvasModel = require('../Models/Provas');
 const ResolucoesModel = require('../Models/Resolucoes');
 const mongoose = require('mongoose');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 /* 
 Obtém uma prova dado o seu id.
@@ -25,10 +26,15 @@ module.exports.getProva = async (id) => {
  * Obtém as questões de uma versão de uma prova
  */
 module.exports.getQuestoesOfVersaoOfProva = (idProva, idVersao) => {
-    return ProvasModel.aggregate([{$match:{"_id":new mongoose.Types.ObjectId(idProva)}},
-    {$unwind:{path:"$versoes"}},
-    {$match:{"versoes.numVersao":parseInt(idVersao)}},
-    {$project:{"versoes.questoes":1}}]).then((result) => {
+    return ProvasModel.aggregate([
+        { $match: { _id: new ObjectId(idProva) } },
+        { $project: { _id: 0, versoes: 1 } },
+        { $unwind: "$versoes" },
+        { $match: { 'versoes.id': idVersao } },
+        { $project: { 'versoes.questoes': 1 } },
+        { $unwind: "$versoes.questoes" },
+        { $replaceRoot: { newRoot: "$versoes.questoes" } }
+    ]).then((result) => {
             return result
         }).catch((err) => {
             throw err
@@ -249,25 +255,16 @@ module.exports.getProvasNaoRealizadasAluno = async (numMecAluno) => {
 }
 
 module.exports.getProvasRealizadasAluno = async (numMecAluno) => {
-    let agora = new Date()
-    agora.setMinutes(agora.getMinutes() - 90);
+    let provasRealizadasIDS = await ResolucoesModel.collection.find({idAluno: numMecAluno}).toArray()
+    provasRealizadasIDS = provasRealizadasIDS.map(prova => new ObjectId(prova.idProva))
     return await ProvasModel.aggregate([
         {
             $match: {
+                _id: {$in: provasRealizadasIDS},
                 "versoes.alunos": numMecAluno
             }
         },
         {$unwind: "$versoes"},
-        {
-            $match: {
-                $expr: {
-                    $lt: [
-                        { $add: [{ $toDate: "$versoes.data" }, { $multiply: ["$versoes.duracao", 60000] }] },
-                        new Date()
-                    ]
-                }
-            }
-        },
         {
             $group: {
                 _id: "$_id",
@@ -298,6 +295,7 @@ module.exports.getProvasRealizadasAluno = async (numMecAluno) => {
             }
         }
     ])
+
 }
 
 /*
