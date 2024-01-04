@@ -22,10 +22,7 @@ module.exports.getProva = async (id) => {
     return doc
 }
 
-/**
- * Obtém as questões de uma versão de uma prova
- */
-module.exports.getQuestoesOfVersaoOfProva = (idProva, idVersao) => {
+module.exports.getQuestoesOfVersaoOfProvaUnwound = (idProva, idVersao) => {
     return ProvasModel.aggregate([
         { $match: { _id: new ObjectId(idProva) } },
         { $project: { _id: 0, versoes: 1 } },
@@ -35,6 +32,20 @@ module.exports.getQuestoesOfVersaoOfProva = (idProva, idVersao) => {
         { $unwind: "$versoes.questoes" },
         { $replaceRoot: { newRoot: "$versoes.questoes" } }
     ]).then((result) => {
+            return result
+        }).catch((err) => {
+            throw err
+    });
+}
+
+/**
+ * Obtém as questões de uma versão de uma prova
+ */
+module.exports.getQuestoesOfVersaoOfProva = (idProva, idVersao) => {
+    return ProvasModel.aggregate([{$match:{"_id":new mongoose.Types.ObjectId(idProva)}},
+        {$unwind:{path:"$versoes"}},
+        {$match:{"versoes.numVersao":parseInt(idVersao)}},
+        {$project:{"versoes.questoes":1}}]).then((result) => {
             return result
         }).catch((err) => {
             throw err

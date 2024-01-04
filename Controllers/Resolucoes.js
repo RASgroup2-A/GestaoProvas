@@ -65,15 +65,6 @@ module.exports.getResolucoesOfAluno = (idAluno) => {
 }
 
 /**
- * Devolve as resolucoes de um aluno a uma prova
- */
- module.exports.getResolucaoOfAluno = (idAluno,idProva) => {
-    console.log(idAluno);
-    console.log(idProva);
-    return ResolucoesModel.findOne({ idAluno: idAluno, idProva:idProva })
-}
-
-/**
  * Adiciona uma resposta de um aluno à resolução de um aluno.
  */
 module.exports.addRespostaToResolucao = (idAluno, idProva, resposta) => {
@@ -95,17 +86,91 @@ module.exports.getResolucoesOfProva = (idProva) => {
     return ResolucoesModel.collection.find({ idProva: idProva }).toArray()
 }
 
+function verificaQuestaoTipo1(resposta, solucao) {
+    let correta = true
+
+    //lista de numeros
+    let opcoesEscolhidas = resposta.opcoesEscolhidas
+
+    let numCorretas = 0
+
+    //mapa de id's de opcao para bool
+    const optionMap = new Map()
+
+    //itera sobre uma lista de opcaoSchema
+    solucao.opcoes.forEach(element => {
+        optionMap.set(element.id, element.correcta)
+        numCorretas += element.correcta ? 1 : 0
+    });
+
+    if (opcoesEscolhidas.length != numCorretas) {
+        correta = false
+    } else {
+        //tem que ter todas corretas para ter a potuaçao
+        opcoesEscolhidas.forEach(element => {
+            correta = correta && optionMap.get(element)
+        });
+    }
+    return correta
+}
+
+function verificaQuestaoTipo2(resposta, solucao) {
+    
+    console.log("questao do tipo 2")
+
+    let correta = true
+
+    //lista de opcoesSchema
+    let respostasPreencherEspacos = resposta.respostasPreencherEspacos
+
+    //mapa de id's de opcao para String
+    const patternMap = new Map()
+
+    //itera sobre uma lista de opcaoSchema
+    solucao.opcoes.forEach(element => {
+
+        patternMap.set(element.id, new RegExp(element.pattern))
+
+    });
+
+    if (respostasPreencherEspacos.length != solucao.opcoes.length) {
+        correta = false
+    } else {
+        //tem que ter todas corretas para ter a potuaçao
+        respostasPreencherEspacos.forEach(element => {
+
+            let pattern = patternMap.get(element.idOpcao)
+
+            console.log("pattern:")
+            console.log(pattern)
+
+            console.log("resposta:")
+            console.log(element.resposta)
+
+            console.log("regex test:")
+            console.log(pattern.test(element.resposta))
+
+            correta = correta && pattern.test(element.resposta)
+
+        });
+    }
+    return correta
+}
+
 
 /**
  * Verifica se uma resposta de um aluno está correcta. Se estiver, devolve a cotação da pergunta. Se não estiver, devolve o desconto da pergunta.
  * !Não é exportada pelo módulo
  */
-function verificaQuestao(respostaAluno, solucoes) {
-    let opcoesEscolhidas = respostaAluno.opcoesEscolhidas.sort((a, b) => a - b) //> lista de números que identificam as opções marcadas como verdadeiras ou selecionadas numa escolha múltipla
-    let solucao = solucoes.filter(q => q.id === respostaAluno.idQuestao)[0] //> questão relativa à respostaAluno
-    let opcoesCorrectas = solucao.opcoes.filter(q => q.correcta === true).map(q => q.id).sort((a, b) => a - b) //> solução desta questão de escolha múltipla ou VF
-    let estaCorrecta = listasIguais(opcoesCorrectas,opcoesEscolhidas) //> verifica a igualdade entre as opções correctas e as opções marcadas pelo aluno
-    return estaCorrecta ? solucao.cotacao : -Math.abs(solucao.desconto)
+function verificaQuestao(resposta, solucao) {
+    //resposta -> respostaSchema
+    //solucao -> questaoSchema
+    
+    let correta = true
+
+    correta = verificaQuestaoTipo1(resposta, solucao)
+
+    return correta ? solucao.cotacao : solucao.desconto
 }
 
 /**
@@ -113,13 +178,33 @@ function verificaQuestao(respostaAluno, solucoes) {
  * 
  */
 module.exports.corrigeResolucao = async (resolucao) => {
+
     let idProva = resolucao.idProva
     let idVersao = resolucao.idVersao
-    let solucoes = await ProvasController.getQuestoesOfVersaoOfProva(idProva, idVersao)
-    let respostas = resolucao.respostas
+
+    //lista de questaoSchema
+    let questoes = await ProvasController.getQuestoesOfVersaoOfProvaUnwound(idProva, idVersao)
+
+    //mapa de id's de questao para questaoSchema
+    const solMap = new Map()
+
+    //copiar todos os elemtos para um mapa 
+    //para evitar filtrar todos os ciclos
+    questoes.forEach(element => {
+        solMap.set(element.id, element)
+    });
+
+    //lista de respostaSchema
+    let respostas = resolucao.respostas // list of respostas
+
     for (let i = 0; i < respostas.length; i++) {
+        //respostaSchema
         let resposta = respostas[i]
-        resposta.cotacao = verificaQuestao(resposta, solucoes)
+
+        //questaoSchema
+        let solucao = solMap.get(resposta.idQuestao)
+
+        resposta.cotacao = verificaQuestao(resposta, solucao)
     }
 }
 
@@ -134,7 +219,7 @@ module.exports.corrigeProva = async (idProva) => {
             await this.corrigeResolucao(resolucao)
             let idResolucao = resolucao._id //> tipo: ObjectId
             delete resolucao._id //> para evitar problemas de reescrita de _id no mongodb
-            await ResolucoesModel.collection.updateOne({ _id: idResolucao }, {$set: resolucao})
+            await ResolucoesModel.collection.updateOne({ _id: idResolucao }, { $set: resolucao })
         }
         return true
     } catch (error) {

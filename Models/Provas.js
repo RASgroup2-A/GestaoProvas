@@ -5,7 +5,14 @@ const ObjectId = mongoose.Types.ObjectId
 const opcaoSchema = new mongoose.Schema({
     id: Number,
     texto: String,
-    correcta: Boolean
+    correcta: {
+        type: Boolean,
+        default: false
+    },
+    pattern: {
+        type: String,
+        default: "" // -> regex com a solucao
+    },
 })
 
 //> Schema de uma questão da prova
