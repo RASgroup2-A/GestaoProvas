@@ -170,12 +170,7 @@ function verificaQuestao(resposta, solucao) {
     
     let correta = true
 
-    if (solucao.tipo == 1) {
-        correta = verificaQuestaoTipo1(resposta, solucao)
-
-    } else if (solucao.tipo == 2) {
-        correta = verificaQuestaoTipo2(resposta, solucao)
-    }
+    correta = verificaQuestaoTipo1(resposta, solucao)
 
     console.log(correta ? solucao.cotacao : solucao.desconto)
 
