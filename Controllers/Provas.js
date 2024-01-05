@@ -211,6 +211,12 @@ module.exports.existsProvaName = async (provaName) => {
     else return { result: false }
 }
 
+module.exports.getProvasOfDocente = async (idDocente) => {
+    let provas =  await ProvasModel.find({"docentes": idDocente})
+    console.log(provas)
+    return provas
+}
+
 /*
 Verifica se uma certa prova tem um docente
 */
