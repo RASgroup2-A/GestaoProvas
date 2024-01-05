@@ -176,7 +176,7 @@ function verificaQuestao(resposta, solucao) {
 
     correta = verificaQuestaoTipo1(resposta, solucao)
 
-    return correta ? solucao.cotacao : solucao.desconto
+    return correta ? solucao.cotacao : -Math.abs(solucao.desconto)
 }
 
 /**
