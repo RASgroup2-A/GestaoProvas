@@ -237,8 +237,7 @@ module.exports.getProvasNaoRealizadasAluno = async (numMecAluno) => {
     let provas = await ProvasModel.aggregate([
         {
             $match: {
-                "versoes.alunos": numMecAluno,
-                "versoes.data": { $gt: agora.toISOString().replace('T', ' ').substring(0, 16) }
+                "versoes.alunos": numMecAluno
             }
         },
         {
@@ -255,7 +254,6 @@ module.exports.getProvasNaoRealizadasAluno = async (numMecAluno) => {
                             as: "versao",
                             cond: {
                                 $and: [
-                                    { $gt: ["$$versao.data", agora.toISOString().replace('T', ' ').substring(0, 16)] },
                                     { $in: [numMecAluno, "$$versao.alunos"] } // Verifica se o aluno está inscrito nesta versão
                                 ]
                             }
