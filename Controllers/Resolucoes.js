@@ -64,14 +64,12 @@ module.exports.getResolucoesOfAluno = (idAluno) => {
     return ResolucoesModel.collection.find({ idAluno: idAluno }).toArray()
 }
 
-
 module.exports.getResolucaoOfAluno = async (idAluno,idProva) => {
     let res = await ResolucoesModel.collection.find({idAluno: idAluno, idProva: idProva}).toArray()
     res = res[0]
     return res
 }
 
-/**
 /**
  * Adiciona uma resposta de um aluno à resolução de um aluno.
  */

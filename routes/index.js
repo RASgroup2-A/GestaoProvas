@@ -197,6 +197,17 @@ router.get('/provas/questoes/:idProva/:versao', function (req, res, next) {
         .then((result) => {
             res.jsonp(result)
         }).catch((err) => {
+            console.log(err)
+            res.status(500).jsonp({ msg: err.message })
+        });
+})
+
+router.get('/provas/docente/:idDocente', function (req, res, next) {
+    let idDocente = req.params.idDocente
+    ProvasController.getProvasOfDocente(idDocente)
+        .then((result) => {
+            res.jsonp(result)
+        }).catch((err) => {
             res.status(500).jsonp({ msg: err.message })
         });
 })
